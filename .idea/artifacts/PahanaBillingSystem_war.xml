@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="PahanaBillingSystem:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <properties id="maven-jee-properties">
+      <options>
+        <module>PahanaBillingSystem</module>
+        <packaging>war</packaging>
+      </options>
+    </properties>
+    <root id="archive" name="PahanaBillingSystem-1.0-SNAPSHOT.war">
+      <element id="artifact" artifact-name="PahanaBillingSystem:war exploded" />
+    </root>
+  </artifact>
+</component>
