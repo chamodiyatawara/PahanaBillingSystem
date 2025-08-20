@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet("/customers") // මේ Servlet එකට access කරන්න පුළුවන් URL path එක
+@WebServlet("/customers") // url path that can access the servlet
 public class CustomerServlet extends HttpServlet {
     private CustomerDAO customerDAO;
 
@@ -57,17 +57,17 @@ public class CustomerServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        doGet(request, response); // POST requests ටිකත් doGet එකට යවනවා
+        doGet(request, response); // POST requests sent to doGet
     }
 
     private void listCustomers(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         List<Customer> listCustomers = customerDAO.getAllCustomers();
-        request.setAttribute("listCustomers", listCustomers); // Customer list එක request එකට දානවා
-        request.getRequestDispatcher("customer-list.jsp").forward(request, response); // customer-list.jsp එකට forward කරනවා
+        request.setAttribute("listCustomers", listCustomers); // Customer list
+        request.getRequestDispatcher("customer-list.jsp").forward(request, response); // forward customer-list.jsp
     }
 
     private void showNewForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        request.getRequestDispatcher("customer-form.jsp").forward(request, response); // New customer form එකට forward කරනවා
+        request.getRequestDispatcher("customer-form.jsp").forward(request, response); // forward New customer form
     }
 
     private void insertCustomer(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -85,7 +85,7 @@ public class CustomerServlet extends HttpServlet {
             return;
         }
 
-        // *** මේ debugging lines ටික එකතු කරන්න ***
+        //debugging
         System.out.println("--- DEBUGGING CUSTOMER INSERT ---");
         System.out.println("Account Number received from form: '" + accountNumber + "'");
         System.out.println("Name received from form: '" + name + "'");
@@ -93,7 +93,7 @@ public class CustomerServlet extends HttpServlet {
         System.out.println("Telephone Number received from form: '" + telephoneNumber + "'");
         System.out.println("Units Consumed received from form: '" + unitsConsumed + "'");
         System.out.println("---------------------------------");
-        // ********************************************
+
 
         Customer newCustomer = new Customer(accountNumber, name, address, telephoneNumber, unitsConsumed);
         boolean success = customerDAO.addCustomer(newCustomer);
@@ -114,12 +114,12 @@ public class CustomerServlet extends HttpServlet {
     private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String accountNumber = request.getParameter("accountNumber");
         Customer existingCustomer = customerDAO.getCustomerByAccountNumber(accountNumber);
-        request.setAttribute("customer", existingCustomer); // Existing customer data request එකට දානවා
-        request.getRequestDispatcher("customer-form.jsp").forward(request, response); // Edit form එකට forward කරනවා
+        request.setAttribute("customer", existingCustomer);
+        request.getRequestDispatcher("customer-form.jsp").forward(request, response); // forward to Edit form
     }
 
     private void updateCustomer(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String accountNumber = request.getParameter("accountNumber"); // Account number එක වෙනස් කරන්න දෙන්න බෑ, ඒක primary key
+        String accountNumber = request.getParameter("accountNumber"); // does not change the Account number (primary key)
         String name = request.getParameter("name");
         String address = request.getParameter("address");
         String telephoneNumber = request.getParameter("telephoneNumber");

@@ -12,7 +12,7 @@ import java.sql.SQLException;
 
 public class UserDAO {
 
-    // Username එකයි password එකයි check කරන්න
+    // Check the Username and Password
     public User getUserByUsernameAndPassword(String username, String password) {
         User user = null;
         String query = "SELECT * FROM users WHERE username = ? AND password = ?"; // SQL query එක
@@ -21,14 +21,14 @@ public class UserDAO {
         ResultSet rs = null;
 
         try {
-            connection = DBConnection.getConnection(); // Database connection එක ගන්නවා
-            ps = connection.prepareStatement(query); // Query එක prepare කරනවා
-            ps.setString(1, username); // username එක set කරනවා
-            ps.setString(2, password); // password එක set කරනවා
-            rs = ps.executeQuery(); // Query එක execute කරනවා
+            connection = DBConnection.getConnection(); // Database connection
+            ps = connection.prepareStatement(query); // Prepare the Query
+            ps.setString(1, username); // Set username
+            ps.setString(2, password); // Set password
+            rs = ps.executeQuery(); // execute Query
 
-            if (rs.next()) { // Result set එකේ record එකක් තිබ්බොත්
-                user = new User(); // User object එකක් හදනවා
+            if (rs.next()) {
+                user = new User();
                 user.setId(rs.getInt("id"));
                 user.setUsername(rs.getString("username"));
                 user.setPassword(rs.getString("password"));
@@ -36,7 +36,7 @@ public class UserDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            // Connections, Statements, ResultSets වහනවා
+            // Connections, Statements, ResultSets
             try {
                 if (rs != null) rs.close();
                 if (ps != null) ps.close();
@@ -45,6 +45,6 @@ public class UserDAO {
                 e.printStackTrace();
             }
         }
-        return user; // User object එක return කරනවා (not found නම් null)
+        return user;
     }
 }

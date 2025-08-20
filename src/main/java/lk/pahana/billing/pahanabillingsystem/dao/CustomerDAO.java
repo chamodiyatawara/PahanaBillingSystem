@@ -12,7 +12,7 @@ import java.util.List;
 
 public class CustomerDAO {
 
-    // අලුත් Customer කෙනෙක් add කරන්න
+    // Adding a new customer
     public boolean addCustomer(Customer customer) {
         String query = "INSERT INTO customers (account_number, name, address, telephone_number, units_consumed) VALUES (?, ?, ?, ?, ?)";
         try (Connection connection = DBConnection.getConnection();
@@ -24,15 +24,15 @@ public class CustomerDAO {
             ps.setString(4, customer.getTelephoneNumber());
             ps.setDouble(5, customer.getUnitsConsumed());
 
-            int rowsAffected = ps.executeUpdate(); // Query එක execute කරලා affected rows ගාන ගන්නවා
-            return rowsAffected > 0; // 1ට වඩා වැඩි නම් true (success)
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
     }
 
-    // Customer කෙනෙක්ගේ information update කරන්න
+    // Update the customer
     public boolean updateCustomer(Customer customer) {
         String query = "UPDATE customers SET name = ?, address = ?, telephone_number = ?, units_consumed = ? WHERE account_number = ?";
         try (Connection connection = DBConnection.getConnection();
@@ -52,7 +52,7 @@ public class CustomerDAO {
         }
     }
 
-    // Customer කෙනෙක්ව delete කරන්න
+    // Delete the customer
     public boolean deleteCustomer(String accountNumber) {
         String query = "DELETE FROM customers WHERE account_number = ?";
         try (Connection connection = DBConnection.getConnection();
@@ -68,7 +68,7 @@ public class CustomerDAO {
         }
     }
 
-    // Account number එකෙන් Customer කෙනෙක්ව හොයාගන්න
+    // Search customer by Account number
     public Customer getCustomerByAccountNumber(String accountNumber) {
         Customer customer = null;
         String query = "SELECT * FROM customers WHERE account_number = ?";
@@ -92,7 +92,7 @@ public class CustomerDAO {
         return customer;
     }
 
-    // හැම Customer කෙනෙක්වම ගන්න
+    // List all customers
     public List<Customer> getAllCustomers() {
         List<Customer> customers = new ArrayList<>();
         String query = "SELECT * FROM customers";

@@ -15,7 +15,7 @@ public class User {
         this.password = password;
     }
 
-    // Getters and Setters (properties වලට data ගන්න සහ set කරන්න)
+    // Getters and Setters
     public int getId() {
         return id;
     }
