@@ -44,6 +44,37 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.28</version> <!-- මේක වෙනස් වෙන්නේ නෑ, මොකද මේක Java version එකට අදාළයි -->
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.18.3</version>
+        </dependency>
+
+        <!-- JUnit for Unit Testing -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.10.0</version> <!-- නවතම stable version එකක් භාවිතා කරන්න -->
+            <scope>test</scope> <!-- මේක test code වලට විතරයි අවශ්‍ය -->
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>4.8.0</version> <!-- Mockito for mocking HttpServletRequest/Response -->
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>4.8.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

@@ -12,7 +12,7 @@ import java.util.List;
 
 public class CustomerDAO {
 
-    // Adding a new customer
+    // අලුත් Customer කෙනෙක් add කරන්න
     public boolean addCustomer(Customer customer) {
         String query = "INSERT INTO customers (account_number, name, address, telephone_number, units_consumed) VALUES (?, ?, ?, ?, ?)";
         try (Connection connection = DBConnection.getConnection();
@@ -24,15 +24,15 @@ public class CustomerDAO {
             ps.setString(4, customer.getTelephoneNumber());
             ps.setDouble(5, customer.getUnitsConsumed());
 
-            int rowsAffected = ps.executeUpdate();
-            return rowsAffected > 0;
+            int rowsAffected = ps.executeUpdate(); // Query එක execute කරලා affected rows ගාන ගන්නවා
+            return rowsAffected > 0; // 1ට වඩා වැඩි නම් true (success)
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
     }
 
-    // Update the customer
+    // Customer කෙනෙක්ගේ information update කරන්න
     public boolean updateCustomer(Customer customer) {
         String query = "UPDATE customers SET name = ?, address = ?, telephone_number = ?, units_consumed = ? WHERE account_number = ?";
         try (Connection connection = DBConnection.getConnection();
@@ -52,7 +52,7 @@ public class CustomerDAO {
         }
     }
 
-    // Delete the customer
+    // Customer කෙනෙක්ව delete කරන්න
     public boolean deleteCustomer(String accountNumber) {
         String query = "DELETE FROM customers WHERE account_number = ?";
         try (Connection connection = DBConnection.getConnection();
@@ -68,7 +68,7 @@ public class CustomerDAO {
         }
     }
 
-    // Search customer by Account number
+    // Account number එකෙන් Customer කෙනෙක්ව හොයාගන්න
     public Customer getCustomerByAccountNumber(String accountNumber) {
         Customer customer = null;
         String query = "SELECT * FROM customers WHERE account_number = ?";
@@ -92,7 +92,7 @@ public class CustomerDAO {
         return customer;
     }
 
-    // List all customers
+    // හැම Customer කෙනෙක්වම ගන්න
     public List<Customer> getAllCustomers() {
         List<Customer> customers = new ArrayList<>();
         String query = "SELECT * FROM customers";
@@ -113,5 +113,57 @@ public class CustomerDAO {
             e.printStackTrace();
         }
         return customers;
+    }
+
+    // Customer Name හෝ Account Number එකෙන් Customers ලා Search කරන්න
+    public List<Customer> searchCustomers(String searchTerm) {
+        List<Customer> customers = new ArrayList<>();
+        // SQL query එකේ LIKE clause එක භාවිතා කරනවා. % කියන්නේ ඕනෑම අකුරු ගානක් වෙන්න පුළුවන්.
+        // searchTerm එක lower case කරලා search කරන්නේ, case-insensitive search එකක් වෙන්න.
+        String query = "SELECT * FROM customers WHERE LOWER(name) LIKE ? OR LOWER(account_number) LIKE ?";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(query)) {
+
+            // Search term එකට % එකතු කරනවා, මොකද කොටසක් search කරන්න.
+            String searchPattern = "%" + searchTerm.toLowerCase() + "%";
+            ps.setString(1, searchPattern); // name column එකට
+            ps.setString(2, searchPattern); // account_number column එකට
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Customer customer = new Customer();
+                    customer.setAccountNumber(rs.getString("account_number"));
+                    customer.setName(rs.getString("name"));
+                    customer.setAddress(rs.getString("address"));
+                    customer.setTelephoneNumber(rs.getString("telephone_number"));
+                    customer.setUnitsConsumed(rs.getDouble("units_consumed"));
+                    customers.add(customer);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("Error searching customers: " + e.getMessage());
+        }
+        return customers;
+    }
+
+    // මුළු Customers ගණන ලබා ගැනීමට
+    public int getTotalCustomers() {
+        int totalCustomers = 0;
+        String query = "SELECT COUNT(account_number) AS total_count FROM customers"; // COUNT() function එක භාවිතා කරනවා
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement ps = connection.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                totalCustomers = rs.getInt("total_count"); // total_count alias එකෙන් value එක ගන්නවා
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("Error getting total customers count: " + e.getMessage());
+        }
+        return totalCustomers;
     }
 }

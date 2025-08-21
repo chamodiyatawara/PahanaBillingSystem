@@ -35,4 +35,23 @@
         <session-timeout>30</session-timeout>
     </session-config>
 
+    <!-- *** Custom Error Pages Configuration *** -->
+    <!-- HTTP 404 Not Found Error -->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/error.jsp</location>
+    </error-page>
+
+    <!-- HTTP 500 Internal Server Error -->
+    <error-page>
+        <error-code>500</error-code>
+        <location>/error.jsp</location>
+    </error-page>
+
+    <!-- General Java Exceptions -->
+    <error-page>
+        <exception-type>java.lang.Exception</exception-type>
+        <location>/error.jsp</location>
+    </error-page>
+
 </web-app>
