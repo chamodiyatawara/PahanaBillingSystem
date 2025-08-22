@@ -19,8 +19,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.*;
 
-// @WebServlet annotation එකෙන් මේ Servlet එකට access කරන්න පුළුවන් URL path එක කියනවා.
-// උදා: http://localhost:8080/PahanaBillingSystem_war_exploded/bill
+
 @WebServlet("/bill")
 public class BillServlet extends HttpServlet {
     private BillDAO billDAO;
@@ -39,7 +38,7 @@ public class BillServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Session check: User logged in ද කියලා බලනවා
+
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
             response.sendRedirect("login.jsp?error=unauthorized");
@@ -49,7 +48,7 @@ public class BillServlet extends HttpServlet {
         String action = request.getParameter("action");
 
         if (action == null) {
-            action = "newBill"; // Default action: New Bill generate කරන්න
+            action = "newBill"; // Default action: New Bill generate
         }
 
         switch (action) {
@@ -59,10 +58,10 @@ public class BillServlet extends HttpServlet {
             case "newBill":
                 showNewBillForm(request, response);
                 break;
-            case "addTempItem": // AJAX request for adding item to temporary bill list
+            case "addTempItem":
                 addTemporaryItem(request, response);
                 break;
-            case "removeItem": // AJAX request for removing item from temporary bill list
+            case "removeItem":
                 removeTemporaryItem(request, response);
                 break;
             case "finalizeBill":
@@ -85,12 +84,12 @@ public class BillServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        doGet(request, response); // POST requests ටිකත් doGet එකට යවනවා
+        doGet(request, response);
     }
 
-    // අලුත් බිලක් generate කරන්න form එක පෙන්වන්න
+    // show form for the generate a new bill
     private void showNewBillForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Customer list එක සහ Item list එක JSP එකට යවනවා
+
         List<Customer> customers = customerDAO.getAllCustomers();
         List<Item> items = itemDAO.getAllItems();
         request.setAttribute("customers", customers);
@@ -105,7 +104,7 @@ public class BillServlet extends HttpServlet {
         }
         request.setAttribute("tempBillItems", tempBillItems);
 
-// tempBillItems list එක JSON string එකකට convert කරලා JSP එකට යවනවා
+
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             String tempBillItemsJson = objectMapper.writeValueAsString(tempBillItems);
@@ -117,7 +116,7 @@ public class BillServlet extends HttpServlet {
         request.getRequestDispatcher("bill-generator.jsp").forward(request, response);
     }
 
-    // Temporary Bill Item එකක් Add කරන්න (AJAX request එකක් විදියට)
+    // add a Temporary Bill Item
     private void addTemporaryItem(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // ... (existing code for validation and adding item to tempBillItems list)
 
@@ -127,7 +126,7 @@ public class BillServlet extends HttpServlet {
         try {
             quantity = Integer.parseInt(request.getParameter("quantity"));
         } catch (NumberFormatException e) {
-            // response.getWriter().write("Error: Invalid quantity."); // කලින් තිබ්බ response එක
+            // response.getWriter().write("Error: Invalid quantity.");
             response.setContentType("application/json");
             response.getWriter().write("{\"status\":\"error\", \"message\":\"Invalid quantity.\"}");
             return;
@@ -148,7 +147,7 @@ public class BillServlet extends HttpServlet {
             return;
         }
 
-        // තොගය ප්‍රමාණවත්ද කියලා බලනවා
+        // quantity instock
         if (item.getQuantityInStock() < quantity) {
             // response.getWriter().write("Error: Not enough stock for " + item.getItemName() + ". Available: " + item.getQuantityInStock());
             response.setContentType("application/json");
@@ -166,11 +165,11 @@ public class BillServlet extends HttpServlet {
             request.getSession().setAttribute("tempBillItems", tempBillItems);
         }
 
-        // දැනටමත් මේ item එක bill එකට add කරලා නම්, quantity එක update කරනවා
+        // If this item has already been added to the bill, update the quantity.
         boolean itemExists = false;
         for (BillItem bi : tempBillItems) {
             if (bi.getItemId().equals(itemId)) {
-                // අලුත් quantity එකෙන් තොගය ප්‍රමාණවත්ද කියලා නැවත බලනවා
+                // We are re-evaluating whether the stock is sufficient with the new quantity.
                 if (item.getQuantityInStock() < (bi.getQuantity() + quantity)) {
                     response.setContentType("application/json");
                     response.getWriter().write("{\"status\":\"error\", \"message\":\"Not enough stock for " + item.getItemName() + ". Available: " + item.getQuantityInStock() + "\"}");
@@ -188,32 +187,31 @@ public class BillServlet extends HttpServlet {
 
         if (!itemExists) {
             double subTotal = quantity * item.getUnitPrice();
-            BillItem billItem = new BillItem(0, itemId, quantity, item.getUnitPrice(), subTotal); // billId දැනට 0, finalize කරද්දී update වෙනවා
+            BillItem billItem = new BillItem(0, itemId, quantity, item.getUnitPrice(), subTotal); // The billId is currently 0, it will be updated when finalized.
             tempBillItems.add(billItem);
 
-            System.out.println("Added new item to temp list: " + billItem.toString()); // *** BillItem object එක print කරනවා ***
+            System.out.println("Added new item to temp list: " + billItem.toString());
 
         }
         System.out.println("--- END DEBUGGING ADD TEMPORARY ITEM ---");
 
-        // *** මෙතනින් පහළට වෙනස්කම් ***
-        // Response එක JSON විදියට යවනවා, අලුත් tempBillItems list එකයි total amount එකයි එක්ක
+
         response.setContentType("application/json");
         ObjectMapper objectMapper = new ObjectMapper(); // Jackson ObjectMapper
 
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("status", "success");
         responseData.put("message", "Item added to bill.");
-        responseData.put("tempBillItems", tempBillItems); // අලුත් tempBillItems list එක
+        responseData.put("tempBillItems", tempBillItems); // New tempBillItems list
 
-        // අලුත් total amount එක calculate කරනවා
+        // Calculating the new total amount.
         double currentTotal = 0;
         for(BillItem bi : tempBillItems) {
             currentTotal += bi.getSubTotal();
         }
         responseData.put("totalAmount", currentTotal);
 
-        // Item Names Map එකත් යවනවා, මොකද JSP එකේදී Item Name එක පෙන්වන්න අවශ්‍ය නිසා
+
         Map<String, String> itemNamesMap = new HashMap<>();
         for(BillItem bi : tempBillItems) {
             Item currentItem = itemDAO.getItemById(bi.getItemId());
@@ -223,10 +221,10 @@ public class BillServlet extends HttpServlet {
         }
         responseData.put("itemNamesMap", itemNamesMap);
 
-        objectMapper.writeValue(response.getWriter(), responseData); // JSON response එක යවනවා
+        objectMapper.writeValue(response.getWriter(), responseData);
     }
 
-    // Temporary Bill Item එකක් Remove කරන්න (AJAX request එකක් විදියට)
+
     private void removeTemporaryItem(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String itemId = request.getParameter("itemId");
         List<BillItem> tempBillItems = (List<BillItem>) request.getSession().getAttribute("tempBillItems");
@@ -236,12 +234,12 @@ public class BillServlet extends HttpServlet {
         System.out.println("Initial tempBillItems size: " + (tempBillItems != null ? tempBillItems.size() : "null"));
 
         if (tempBillItems != null) {
-            boolean removed = false; // Item එක remove වුණාද කියලා බලන්න
+            boolean removed = false; // Check if the item has been removed.
             Iterator<BillItem> iterator = tempBillItems.iterator();
             while (iterator.hasNext()) {
                 BillItem bi = iterator.next();
                 System.out.println("  Comparing: Current BillItem ID in list: '" + bi.getItemId() + "' with Request Item ID: '" + itemId + "'");
-                if (bi.getItemId().equals(itemId)) { // *** මෙතන equals() method එකේ ගැටලුවක් වෙන්න පුළුවන් ***
+                if (bi.getItemId().equals(itemId)) {
                     iterator.remove();
                     removed = true;
                     System.out.println("  SUCCESS: Item " + itemId + " removed from temporary list.");
@@ -263,7 +261,7 @@ public class BillServlet extends HttpServlet {
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("status", "success");
         responseData.put("message", "Item removed from bill.");
-        responseData.put("tempBillItems", tempBillItems); // අලුත් tempBillItems list එක (item එක නැතුව)
+        responseData.put("tempBillItems", tempBillItems);
 
         double currentTotal = 0;
         if (tempBillItems != null) {
@@ -287,7 +285,7 @@ public class BillServlet extends HttpServlet {
         objectMapper.writeValue(response.getWriter(), responseData);
     }
 
-    // Bill එක Finalize කරන්න
+    // Bill  Finalize
     private void finalizeBill(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String customerAccountNumber = request.getParameter("customerAccountNumber");
         List<BillItem> tempBillItems = (List<BillItem>) request.getSession().getAttribute("tempBillItems");
@@ -315,11 +313,11 @@ public class BillServlet extends HttpServlet {
             totalAmount += bi.getSubTotal();
         }
 
-        // Get current logged in user ID
+
         User currentUser = (User) request.getSession().getAttribute("currentUser");
         int userId = currentUser != null ? currentUser.getId() : 0; // If user ID is not tracked, use 0 or a default
 
-        // 1. Bill එක database එකට Add කරන්න
+        // 1. add Bill to database
         Bill bill = new Bill(customerAccountNumber, new Date(), totalAmount, userId);
         System.out.println("Attempting to add Bill to DB: " + bill.toString());
         int billId = billDAO.addBill(bill);
@@ -328,13 +326,13 @@ public class BillServlet extends HttpServlet {
             boolean allItemsAdded = true;
             boolean allQuantitiesUpdated = true;
 
-            // 2. Bill Items ටික database එකට Add කරන්න සහ Item Quantities අඩු කරන්න
+            // 2. Add the Bill Items to the database and reduce the Item Quantities.
             for (BillItem bi : tempBillItems) {
-                bi.setBillId(billId); // Generate වුණ billId එක BillItem එකට set කරනවා
-                int billItemId = billItemDAO.addBillItem(bi); // Bill Item එක database එකට දානවා
+                bi.setBillId(billId);
+                int billItemId = billItemDAO.addBillItem(bi);
 
                 if (billItemId > 0) {
-                    // Item එකේ තොගය අඩු කරන්න
+
                     Item itemInStock = itemDAO.getItemById(bi.getItemId());
                     if (itemInStock != null && itemInStock.getQuantityInStock() >= bi.getQuantity()) {
                         int newQuantity = itemInStock.getQuantityInStock() - bi.getQuantity();
@@ -350,14 +348,14 @@ public class BillServlet extends HttpServlet {
             }
 
             if (allItemsAdded && allQuantitiesUpdated) {
-                request.getSession().removeAttribute("tempBillItems"); // Temporary bill items session එකෙන් අයින් කරනවා
+                request.getSession().removeAttribute("tempBillItems");
 //                request.setAttribute("message", "Bill generated successfully! Bill ID: " + billId);
-//                request.setAttribute("finalBillId", billId); // Final bill ID එක JSP එකට යවනවා
+//                request.setAttribute("finalBillId", billId);
                 System.out.println("Bill Finalized successfully. Redirecting to bill-details.jsp");
-//                request.getRequestDispatcher("bill-details.jsp").forward(request, response); // Bill Details page එකට යවනවා
+//                request.getRequestDispatcher("bill-details.jsp").forward(request, response);
                 HttpSession session = request.getSession();
                 session.setAttribute("successMessage", "Bill generated successfully! Bill ID: " + billId);
-                response.sendRedirect("bill?action=viewBillDetails&billId=" + billId); // BillServlet එකේ viewBillDetails action එකට redirect කරනවා
+                response.sendRedirect("bill?action=viewBillDetails&billId=" + billId);
             } else {
                 // If something went wrong, try to rollback (more complex for this demo)
                 // For simplicity, just show an error.
@@ -374,25 +372,24 @@ public class BillServlet extends HttpServlet {
         }
     }
 
-    // සියලුම Bills list කරන්න (Search functionality එකත් එක්ක)
+
     private void listBills(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String searchTerm = request.getParameter("search"); // Search box එකෙන් එන "search" parameter එක ගන්නවා
+        String searchTerm = request.getParameter("search");
         List<Bill> bills;
 
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            // Search term එකක් තියෙනවා නම්, searchBills method එක call කරනවා
+
             bills = billDAO.searchBills(searchTerm.trim());
-            request.setAttribute("searchTerm", searchTerm); // Search term එක JSP එකට යවනවා, search box එකේ value එක retain කරන්න
+            request.setAttribute("searchTerm", searchTerm);
         } else {
-            // Search term එකක් නැත්නම්, සියලුම bills ලා ගන්නවා
+
             bills = billDAO.getAllBills();
         }
 
-        request.setAttribute("bills", bills); // Bill list එක request එකට දානවා
-        request.getRequestDispatcher("bill-list.jsp").forward(request, response); // bill-list.jsp එකට forward කරනවා
+        request.setAttribute("bills", bills);
+        request.getRequestDispatcher("bill-list.jsp").forward(request, response);
     }
 
-    // Bill එකක details view කරන්න
     private void viewBillDetails(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int billId = 0;
         try {
@@ -412,19 +409,16 @@ public class BillServlet extends HttpServlet {
 
         List<BillItem> billItems = billItemDAO.getBillItemsByBillId(billId);
 
-        // *** මේ කොටස අලුතින් එකතු කරන්න ***
-        // Item ID එකට අදාළ Item Name එක තියාගන්න Map එකක් හදනවා
+
         Map<String, String> itemNamesMap = new HashMap<>();
         for(BillItem bi : billItems) {
-            Item item = itemDAO.getItemById(bi.getItemId()); // Item ID එකෙන් Item object එක ගන්නවා
+            Item item = itemDAO.getItemById(bi.getItemId());
             if(item != null) {
-                itemNamesMap.put(item.getItemId(), item.getItemName()); // Map එකට Item ID එකයි Item Name එකයි දානවා
+                itemNamesMap.put(item.getItemId(), item.getItemName());
             }
         }
-        request.setAttribute("itemNamesMap", itemNamesMap); // Map එක JSP එකට යවනවා
-        // ********************************************
+        request.setAttribute("itemNamesMap", itemNamesMap);
 
-        // Customer Account Number එකට අදාළ Customer Name එක තියාගන්න Map එකක්
         Map<String, String> customerNamesMap = new HashMap<>();
         Customer customer = customerDAO.getCustomerByAccountNumber(bill.getCustomerAccountNumber());
         if (customer != null) {
@@ -432,11 +426,11 @@ public class BillServlet extends HttpServlet {
         }
         request.setAttribute("customerNamesMap", customerNamesMap);
 
-        // User ID එකට අදාළ User Name එක තියාගන්න Map එකක්
+
         Map<Integer, String> userNamesMap = new HashMap<>();
-        // User ID එක 0 නම් (default), ඒක skip කරනවා
+
         if (bill.getUserId() != 0) {
-            User user = userDAO.getUserById(bill.getUserId()); // UserDAO එකේ getItemById වගේ getUserById method එකක් අවශ්‍යයි
+            User user = userDAO.getUserById(bill.getUserId());
             if (user != null) {
                 userNamesMap.put(user.getId(), user.getUsername());
             }
@@ -448,27 +442,26 @@ public class BillServlet extends HttpServlet {
         request.getRequestDispatcher("bill-details.jsp").forward(request, response);
     }
 
-    // *** Bill එක Print කරන්න ***
+
     private void printBill(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int billId = 0;
         try {
             billId = Integer.parseInt(request.getParameter("billId"));
         } catch (NumberFormatException e) {
             request.setAttribute("error", "Invalid Bill ID for printing.");
-            listBills(request, response); // Error නම් Bill List එකට යවනවා
-            return;
+            listBills(request, response);
         }
 
         Bill bill = billDAO.getBillById(billId);
         if (bill == null) {
             request.setAttribute("error", "Bill not found for printing: " + billId);
-            listBills(request, response); // Error නම් Bill List එකට යවනවා
+            listBills(request, response);
             return;
         }
 
         List<BillItem> billItems = billItemDAO.getBillItemsByBillId(billId);
 
-        // Item Names Map එක (viewBillDetails වගේම)
+
         Map<String, String> itemNamesMap = new HashMap<>();
         for(BillItem bi : billItems) {
             Item item = itemDAO.getItemById(bi.getItemId());
@@ -478,7 +471,7 @@ public class BillServlet extends HttpServlet {
         }
         request.setAttribute("itemNamesMap", itemNamesMap);
 
-        // Customer Names Map එක (viewBillDetails වගේම)
+
         Map<String, String> customerNamesMap = new HashMap<>();
         Customer customer = customerDAO.getCustomerByAccountNumber(bill.getCustomerAccountNumber());
         if (customer != null) {
@@ -486,7 +479,7 @@ public class BillServlet extends HttpServlet {
         }
         request.setAttribute("customerNamesMap", customerNamesMap);
 
-        // User Names Map එක (viewBillDetails වගේම)
+
         Map<Integer, String> userNamesMap = new HashMap<>();
         if (bill.getUserId() != 0) {
             User user = userDAO.getUserById(bill.getUserId());
@@ -498,10 +491,10 @@ public class BillServlet extends HttpServlet {
 
         request.setAttribute("bill", bill);
         request.setAttribute("billItems", billItems);
-        request.getRequestDispatcher("bill-print.jsp").forward(request, response); // bill-print.jsp එකට forward කරනවා
+        request.getRequestDispatcher("bill-print.jsp").forward(request, response);
     }
 
-    // Dashboard එකට අවශ්‍ය data load කරන්න ***
+
     private void loadDashboard(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 //        System.out.println("--- DEBUGGING LOAD DASHBOARD ---");
 //        System.out.println("Request URL: " + request.getRequestURL());
@@ -517,12 +510,12 @@ public class BillServlet extends HttpServlet {
 //        System.out.println("Fetched Total Items from DB: " + totalItems);
 //        System.out.println("Fetched Total Sales Amount from DB: " + totalSalesAmount);
 
-        // *** මෙතන වෙනස් කරන්න (forward එකට ආයෙත් යමු) ***
+
         request.setAttribute("totalCustomers", totalCustomers);
         request.setAttribute("totalItems", totalItems);
         request.setAttribute("totalSalesAmount", totalSalesAmount);
         request.getRequestDispatcher("dashboard.jsp").forward(request, response);
-        // ********************************************
+
 //        System.out.println("--- END DEBUGGING LOAD DASHBOARD ---");
     }
 }

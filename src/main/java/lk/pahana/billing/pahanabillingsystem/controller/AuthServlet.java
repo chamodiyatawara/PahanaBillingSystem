@@ -14,58 +14,60 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
-@WebServlet("/auth") // මේ Servlet එකට access කරන්න පුළුවන් URL path එක
+@WebServlet("/auth") // The URL path that can be accessed to the servlet
+
 public class AuthServlet extends HttpServlet {
     private UserDAO userDAO;
 
     public void init() {
-        userDAO = new UserDAO(); // Servlet එක initiate වෙනකොට UserDAO එක හදනවා
+        userDAO = new UserDAO(); // When the Servlet is initiated, it creates the UserDAO.
+
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String action = request.getParameter("action"); // "action" parameter එක ගන්නවා
+        String action = request.getParameter("action");
 
         if (action != null && action.equals("login")) {
-            handleLogin(request, response); // Login request එක handle කරනවා
+            handleLogin(request, response);
         } else if (action != null && action.equals("logout")) {
-            handleLogout(request, response); // Logout request එක handle කරනවා
+            handleLogout(request, response);
         } else {
-            response.sendRedirect("login.jsp?error=invalid_action"); // Invalid action නම් login page එකට යවනවා
+            response.sendRedirect("login.jsp?error=invalid_action");
         }
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Logout request එක GET විදියට ආවොත්, ඒක doPost() එකටම handle කරන්න යවනවා.
-        // AuthServlet එකේ අපි action parameter එක බලන්නේ POST එකකින් වගේම.
+        // If the logout request comes as a GET method, it is sent to handle the doPost() function.
+        // In the AuthServlet, we check the action parameter in the same way as with a POST.
         doPost(request, response);
     }
 
     private void handleLogin(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String username = request.getParameter("username"); // Form එකෙන් username එක ගන්නවා
-        String password = request.getParameter("password"); // Form එකෙන් password එක ගන්නවා
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
 
-        User user = userDAO.getUserByUsernameAndPassword(username, password); // Database එකෙන් user ව check කරනවා
+        User user = userDAO.getUserByUsernameAndPassword(username, password);
 
-        if (user != null) { // User ව හම්බුනොත්
-            HttpSession session = request.getSession(); // Session එකක් හදනවා
-            session.setAttribute("currentUser", user); // Session එකට user ව දානවා
-            session.setMaxInactiveInterval(30 * 60); // Session timeout 30 minutes
-//            response.sendRedirect("dashboard.jsp"); // Dashboard එකට redirect කරනවා
-            response.sendRedirect("bill?action=dashboard"); // BillServlet එකේ dashboard action එකට redirect කරනවා
-        } else { // User ව හම්බුනේ නැත්නම්
+        if (user != null) {
+            HttpSession session = request.getSession();
+            session.setAttribute("currentUser", user);
+            session.setMaxInactiveInterval(30 * 60);
+//            response.sendRedirect("dashboard.jsp");
+            response.sendRedirect("bill?action=dashboard");
+        } else {
             String errorMessage = "Invalid username or password!";
-            request.setAttribute("errorMessage", errorMessage); // Error message එක request එකට දානවා
-            request.getRequestDispatcher("login.jsp").forward(request, response); // Login page එකට forward කරනවා
+            request.setAttribute("errorMessage", errorMessage);
+            request.getRequestDispatcher("login.jsp").forward(request, response);
         }
     }
 
     private void handleLogout(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession(false); // Existing session එක ගන්නවා
+        HttpSession session = request.getSession(false);
         if (session != null) {
-            session.invalidate(); // Session එක destroy කරනවා
+            session.invalidate();
         }
-        response.sendRedirect("login.jsp?message=logged_out"); // Login page එකට redirect කරනවා
+        response.sendRedirect("login.jsp?message=logged_out");
     }
 }

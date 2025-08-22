@@ -4,7 +4,7 @@
     <title>Pahana Edu - Login</title>
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <style>
-        /* Redesigned login page (visual only) */
+
         :root{
             --primary:#337ab7;
             --bg:#f4f6f9;

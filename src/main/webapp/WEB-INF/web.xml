@@ -10,8 +10,10 @@
         <welcome-file>login.jsp</welcome-file>
     </welcome-file-list>
 
-    <!-- Servlets වල @WebServlet annotation එක භාවිතා කරන නිසා, මෙතන declare කිරීම අත්‍යවශ්‍ය නෑ -->
-    <!-- නමුත් අවශ්‍ය නම් මේ විදියට add කරන්න පුළුවන්:
+    <!-- Since the @WebServlet annotation is used in Servlets, it is not
+    necessary to declare it here. However, if needed, you can add it like this
+
+
     <servlet>
         <servlet-name>AuthServlet</servlet-name>
         <servlet-class>lk.pahana.billing.controller.AuthServlet</servlet-class>
