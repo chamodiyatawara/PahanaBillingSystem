@@ -17,26 +17,25 @@ import java.util.List;
 
 @WebServlet("/user")
 public class UserServlet extends HttpServlet {
-    private UserDAO userDAO; // UserDAO object එක
+    private UserDAO userDAO;
 
     public void init() {
-        userDAO = new UserDAO(); // Servlet එක initiate වෙනකොට UserDAO එක හදනවා
+        userDAO = new UserDAO();
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Session check: User logged in ද කියලා බලනවා
+
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
             response.sendRedirect("login.jsp?error=unauthorized");
             return;
         }
 
-        // *** Role-Based Access Control: User Management admin ට පමණයි ***
         User currentUser = (User) session.getAttribute("currentUser");
         if (currentUser == null || !"admin".equalsIgnoreCase(currentUser.getRole())) {
             session.setAttribute("errorMessage", "Access Denied: Only administrators can manage users.");
-            response.sendRedirect("bill?action=dashboard"); // Dashboard එකට redirect කරනවා
+            response.sendRedirect("bill?action=dashboard");
             return;
         }
 
@@ -86,7 +85,7 @@ public class UserServlet extends HttpServlet {
             return;
         }
 
-        // Role-Based Access Control: User Management admin ට පමණයි
+        // Role-Based Access Control: User Management only  admin
         User currentUser = (User) session.getAttribute("currentUser");
         if (currentUser == null || !"admin".equalsIgnoreCase(currentUser.getRole())) {
             session.setAttribute("errorMessage", "Access Denied: Only administrators can manage users.");
@@ -96,7 +95,7 @@ public class UserServlet extends HttpServlet {
 
         String action = request.getParameter("action");
 
-        // *** මෙතනින් පහළට doPost method එකේ වෙනස්කම් ***
+
         if (action != null) {
             switch (action) {
                 case "register":
@@ -115,21 +114,21 @@ public class UserServlet extends HttpServlet {
         // **************************************************
     }
 
-    // User Registration form එක පෙන්වන්න
+
     private void showRegisterForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // මේ page එකට access කරන්න admin role එකක් තියෙනවද කියලා බලමු (ප්‍රවේශ පාලනය)
+
         User currentUser = (User) request.getSession().getAttribute("currentUser");
         if (currentUser == null || !"admin".equalsIgnoreCase(currentUser.getRole())) {
             request.setAttribute("error", "Access Denied: Only administrators can register new users.");
-            request.getRequestDispatcher("dashboard.jsp").forward(request, response); // Dashboard එකට යවනවා
+            request.getRequestDispatcher("dashboard.jsp").forward(request, response);
             return;
         }
         request.getRequestDispatcher("register.jsp").forward(request, response);
     }
 
-    // අලුත් User කෙනෙක් Register කරන්න
+
     private void registerUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // මේ method එකට access කරන්න admin role එකක් තියෙනවද කියලා බලමු (ප්‍රවේශ පාලනය)
+
         User currentUser = (User) request.getSession().getAttribute("currentUser");
         if (currentUser == null || !"admin".equalsIgnoreCase(currentUser.getRole())) {
             request.setAttribute("error", "Access Denied: Only administrators can register new users.");
@@ -140,7 +139,7 @@ public class UserServlet extends HttpServlet {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
         String confirmPassword = request.getParameter("confirmPassword");
-        String role = request.getParameter("role"); // Form එකෙන් role එක ගන්නවා
+        String role = request.getParameter("role");
 
         // Input Validation
         if (username == null || username.trim().isEmpty() ||
@@ -158,35 +157,35 @@ public class UserServlet extends HttpServlet {
             return;
         }
 
-        // Username එක දැනටමත් තියෙනවද කියලා බලනවා
+
         if (userDAO.isUsernameExists(username)) {
             request.setAttribute("error", "Username '" + username + "' already exists. Please choose a different username.");
             request.getRequestDispatcher("register.jsp").forward(request, response);
             return;
         }
 
-        // User object එක හදනවා
-        User newUser = new User(username, password, role); // User Model එකේ අලුත් constructor එක භාවිතා කරනවා
 
-        boolean success = userDAO.registerUser(newUser); // UserDAO එකෙන් user ව register කරනවා
+        User newUser = new User(username, password, role);
+
+        boolean success = userDAO.registerUser(newUser);
 
         if (success) {
             request.setAttribute("message", "User '" + username + "' registered successfully as " + role + "!");
-            request.getRequestDispatcher("register.jsp").forward(request, response); // සාර්ථක නම් register page එකටම යවනවා
+            request.getRequestDispatcher("register.jsp").forward(request, response);
         } else {
             request.setAttribute("error", "Failed to register user. Please try again.");
             request.getRequestDispatcher("register.jsp").forward(request, response);
         }
     }
 
-    // *** අලුත් method එක: සියලුම Users ලා list කරන්න ***
+
     private void listUsers(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        List<User> listUsers = userDAO.getAllUsers(); // UserDAO එකෙන් සියලුම users ගන්නවා
-        request.setAttribute("listUsers", listUsers); // User list එක request එකට දානවා
-        request.getRequestDispatcher("user-list.jsp").forward(request, response); // user-list.jsp එකට forward කරනවා
+        List<User> listUsers = userDAO.getAllUsers();
+        request.setAttribute("listUsers", listUsers);
+        request.getRequestDispatcher("user-list.jsp").forward(request, response);
     }
 
-    // *** අලුත් method එක: User Edit Form පෙන්වන්න ***
+
     private void showEditUserForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int userId = 0;
         try {
@@ -200,14 +199,14 @@ public class UserServlet extends HttpServlet {
         User existingUser = userDAO.getUserById(userId);
         if (existingUser != null) {
             request.setAttribute("user", existingUser);
-            request.getRequestDispatcher("user-form.jsp").forward(request, response); // user-form.jsp එකට forward කරනවා
+            request.getRequestDispatcher("user-form.jsp").forward(request, response);
         } else {
             request.setAttribute("error", "User not found for editing: " + userId);
             listUsers(request, response);
         }
     }
 
-    // *** අලුත් method එක: User Update කරන්න ***
+
     private void updateUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         System.out.println("--- DEBUGGING USER UPDATE ---");
         int userId = 0;
@@ -221,17 +220,17 @@ public class UserServlet extends HttpServlet {
 
         String username = request.getParameter("username");
         String role = request.getParameter("role");
-        String password = request.getParameter("password"); // Password එකත් update කරන්න පුළුවන්
+        String password = request.getParameter("password");
 
-        // *** මේ debugging lines ටික එකතු කරන්න ***
+
         System.out.println("User ID to update: " + userId);
         System.out.println("Username received: '" + username + "'");
         System.out.println("Role received: '" + role + "'");
-        System.out.println("Password received: '" + password + "'"); // Password එක print කරද්දී ප්‍රවේශමෙන්
+        System.out.println("Password received: '" + password + "'");
         // ********************************************
 
 
-        // Input Validation (Basic for now, can be enhanced)
+
         if (username == null || username.trim().isEmpty() ||
                 role == null || role.trim().isEmpty()) {
             request.setAttribute("error", "Username and Role are required.");
@@ -253,11 +252,11 @@ public class UserServlet extends HttpServlet {
 
         User userToUpdate = new User(userId, username, password, role); // Use the constructor with ID and password
 
-        System.out.println("Attempting to update user in DB: " + userToUpdate.toString()); // User object එක print කරනවා
+        System.out.println("Attempting to update user in DB: " + userToUpdate.toString());
 
-        boolean success = userDAO.updateUser(userToUpdate); // UserDAO එකේ updateUser method එකක් අවශ්‍යයි
+        boolean success = userDAO.updateUser(userToUpdate);
 
-        System.out.println("User update success status from DAO: " + success); // DAO එකෙන් එන success status එක print කරනවා
+        System.out.println("User update success status from DAO: " + success);
 
         if (success) {
             request.setAttribute("message", "User '" + username + "' updated successfully!");
@@ -268,7 +267,7 @@ public class UserServlet extends HttpServlet {
         System.out.println("--- END DEBUGGING USER UPDATE ---");
     }
 
-    // *** අලුත් method එක: User Delete කරන්න ***
+
     private void deleteUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();
         int userId = 0;
@@ -280,7 +279,7 @@ public class UserServlet extends HttpServlet {
             return;
         }
 
-        // Admin කෙනෙක් තමන්වම delete කරන එක වළක්වන්න පුළුවන්
+        // can not delete the Admin
         User currentUser = (User) request.getSession().getAttribute("currentUser");
         if (currentUser != null && currentUser.getId() == userId) {
             session.setAttribute("errorMessage", "You cannot delete your own account!");
@@ -288,7 +287,7 @@ public class UserServlet extends HttpServlet {
             return;
         }
 
-        boolean success = userDAO.deleteUser(userId); // UserDAO එකේ deleteUser method එකක් අවශ්‍යයි
+        boolean success = userDAO.deleteUser(userId);
 
         if (success) {
             request.setAttribute("message", "User ID " + userId + " deleted successfully!");

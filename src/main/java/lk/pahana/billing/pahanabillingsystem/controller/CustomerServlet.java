@@ -14,7 +14,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet("/customers") // මේ Servlet එකට access කරන්න පුළුවන් URL path එක
+@WebServlet("/customers")
 public class CustomerServlet extends HttpServlet {
     private CustomerDAO customerDAO;
 
@@ -25,7 +25,7 @@ public class CustomerServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        // Session check: User logged in ද කියලා බලනවා
+
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
             response.sendRedirect("login.jsp?error=unauthorized");
@@ -66,34 +66,34 @@ public class CustomerServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        doGet(request, response); // POST requests ටිකත් doGet එකට යවනවා
+        doGet(request, response);
     }
 
 //    private void listCustomers(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 //        List<Customer> listCustomers = customerDAO.getAllCustomers();
-//        request.setAttribute("listCustomers", listCustomers); // Customer list එක request එකට දානවා
-//        request.getRequestDispatcher("customer-list.jsp").forward(request, response); // customer-list.jsp එකට forward කරනවා
+//        request.setAttribute("listCustomers", listCustomers);
+//        request.getRequestDispatcher("customer-list.jsp").forward(request, response);
 //    }
 
     private void listCustomers(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String searchTerm = request.getParameter("search"); // Search box එකෙන් එන "search" parameter එක ගන්නවා
+        String searchTerm = request.getParameter("search");
         List<Customer> listCustomers;
 
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            // Search term එකක් තියෙනවා නම්, searchCustomers method එක call කරනවා
+
             listCustomers = customerDAO.searchCustomers(searchTerm.trim());
-            request.setAttribute("searchTerm", searchTerm); // Search term එක JSP එකට යවනවා, search box එකේ value එක retain කරන්න
+            request.setAttribute("searchTerm", searchTerm);
         } else {
-            // Search term එකක් නැත්නම්, සියලුම customers ලා ගන්නවා
+
             listCustomers = customerDAO.getAllCustomers();
         }
 
-        request.setAttribute("listCustomers", listCustomers); // Customer list එක request එකට දානවා
-        request.getRequestDispatcher("customer-list.jsp").forward(request, response); // customer-list.jsp එකට forward කරනවා
+        request.setAttribute("listCustomers", listCustomers);
+        request.getRequestDispatcher("customer-list.jsp").forward(request, response);
     }
 
     private void showNewForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        request.getRequestDispatcher("customer-form.jsp").forward(request, response); // New customer form එකට forward කරනවා
+        request.getRequestDispatcher("customer-form.jsp").forward(request, response);
     }
 
     private void insertCustomer(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -130,12 +130,12 @@ public class CustomerServlet extends HttpServlet {
     private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String accountNumber = request.getParameter("accountNumber");
         Customer existingCustomer = customerDAO.getCustomerByAccountNumber(accountNumber);
-        request.setAttribute("customer", existingCustomer); // Existing customer data request එකට දානවා
-        request.getRequestDispatcher("customer-form.jsp").forward(request, response); // Edit form එකට forward කරනවා
+        request.setAttribute("customer", existingCustomer);
+        request.getRequestDispatcher("customer-form.jsp").forward(request, response);
     }
 
     private void updateCustomer(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String accountNumber = request.getParameter("accountNumber"); // Account number එක වෙනස් කරන්න දෙන්න බෑ, ඒක primary key
+        String accountNumber = request.getParameter("accountNumber");
         String name = request.getParameter("name");
         String address = request.getParameter("address");
         String telephoneNumber = request.getParameter("telephoneNumber");
